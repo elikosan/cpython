@@ -371,7 +371,83 @@ PyImport_GetModule(PyObject *name)
     Py_DECREF(modules);
     return m;
 }
+/*
 
+int
+PyImport_UnloadModule(PyObject *name, PyObject *filename)
+{
+  PyObject *mod, *modules, *key;
+
+
+  mod = PyImport_GetModule(name);
+  if (mod == NULL && !PyErr_Occurred()) {
+    PyErr_Format(PyExc_ImportError,
+      "Loaded module %R not found in sys.modules",
+      name);
+    return -1;
+  }
+  _PyModule_Clear(mod);
+  Py_DECREF(mod);
+
+  key = PyTuple_Pack(2, filename, name);
+  if (key == NULL)
+    return -1;
+  PyDict_SetItem(extensions, key, Py_None);
+  Py_DECREF(key);
+
+  modules = PyImport_GetModuleDict();
+  if (PyObject_DelItem(modules, name) < 0) {
+    PyErr_WriteUnraisable(NULL);
+    return -1;
+  }
+
+  return 0;
+}
+
+*/
+
+int
+PyImport_UnloadModule(PyObject *name, PyObject *filename)
+{
+  PyObject *mod=NULL, *modules=NULL, *key=NULL;
+
+  while (_PyGC_CollectIfEnabled() > 0);
+
+  mod = PyImport_GetModule(name);
+  if (mod == NULL && !PyErr_Occurred()) {
+    PyErr_Format(PyExc_ImportError,
+      "Loaded module %R not found in sys.modules",
+      name);
+    goto ERR;
+  }
+  _PyModule_Clear(mod);
+  if (PyErr_Occurred())
+  {
+    goto ERR;
+  }
+
+  key = PyTuple_Pack(2, filename, name);
+  if (key == NULL) goto ERR;
+  if (PyDict_SetItem(extensions, key,Py_None) < 0)
+  {
+    goto ERR;
+  }
+
+  modules = PyImport_GetModuleDict();
+  if (PyObject_DelItem(modules, name) < 0)
+  {
+    goto ERR;
+  }
+
+  while (_PyGC_CollectIfEnabled() > 0);
+
+  return 0;
+
+ERR:
+  Py_XDECREF(mod);
+  Py_XDECREF(key);
+  return -1;
+}
 
 /* List of names to clear in sys */
 static const char * const sys_deletes[] = {
