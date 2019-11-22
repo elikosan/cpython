@@ -41,6 +41,7 @@ PyAPI_FUNC(PyObject *) PyImport_GetModuleDict(void);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03070000
 PyAPI_FUNC(PyObject *) PyImport_GetModule(PyObject *name);
 PyAPI_FUNC(int) PyImport_UnloadModule(PyObject *name, PyObject *filename);
+#define PyImport_UnloadModule_available
 #endif
 #ifndef Py_LIMITED_API
 PyAPI_FUNC(int) _PyImport_IsInitialized(PyInterpreterState *);
